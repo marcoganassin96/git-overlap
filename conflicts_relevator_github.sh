@@ -236,6 +236,61 @@ _curl_api_method() {
   _print_results RESULTS
 }
 
+_gh_cli_method() {
+  echo "🔑 Searching GitHub for PRs modifying ${#FILE_PATHS[@]} file(s) via gh..." >&2
+  REPO_FULL_NAME=$(_get_repo_full_name "$REMOTE_URL")
+  
+  TARGET_FILES=$(IFS=,; echo "${FILE_PATHS[*]}")
+  
+  # The core command to list and filter PRs via GitHub API
+  OPEN_PRS_RESPONSE=$(
+    gh pr list \
+      --repo "$REPO_FULL_NAME" \
+      --limit 5 \
+      --json number,headRefName,files \
+      --search "is:open is:unmerged"
+  )
+  
+
+  if [ $? -ne 0 ]; then
+    echo "Error: 'gh pr list' failed. Make sure you are logged in (gh auth login)." >&2
+    # Do not exit here, allow the wrapper to handle the exit status if desired,
+    # but for a successful gh call, this is the end.
+    exit 1
+  fi
+
+  #printf "OPEN_PRS_RESPONSE: %s\n" "$OPEN_PRS_RESPONSE" >&2
+  
+  # Initialize an array to store the final results: "file_path,branch_name"
+  declare -A RESULTS
+  # Iterate over each PR object in the JSON array
+  PR_COUNT=$(echo "$OPEN_PRS_RESPONSE" | jq 'length')
+  echo "Debug: Anlyzing $PR_COUNT open PR(s) in the repository..."
+  counter=1
+  while IFS= read -r PR_OBJECT; do
+    PR_NUMBER=$(echo "$PR_OBJECT" | jq -r '.number' | tr -d '[:space:]')
+    PR_BRANCH=$(echo "$PR_OBJECT" | jq -r '.headRefName' | tr -d '[:space:]')
+    echo -ne "\r\033[KProcessing PR $counter of $PR_COUNT: #${PR_NUMBER} (${PR_BRANCH})..." >&2
+    counter=$((counter + 1))
+    # Extract changed files array
+    mapfile -t CHANGED_FILES_NAMES < <( \
+      echo "$PR_OBJECT" | jq -r '.files[].path' | sed -E 's/^\s+|\s+$//g' \
+    )
+    # 4. Check if any of the requested FILE_PATHS are present in the PR's changed files.
+    for TARGET_FILE in "${FILE_PATHS[@]}"; do
+      for CHANGED_FILE in "${CHANGED_FILES_NAMES[@]}"; do
+        if [ "$CHANGED_FILE" = "$TARGET_FILE" ]; then
+          if [[ ! -v RESULTS["$TARGET_FILE"] ]]; then
+              RESULTS["$TARGET_FILE"]="${PR_BRANCH},${PR_NUMBER}"
+          else
+              RESULTS["$TARGET_FILE"]+=";${PR_BRANCH},${PR_NUMBER}"
+          fi
+        fi
+      done
+    done
+  done < <(echo "$OPEN_PRS_RESPONSE" | jq -c '.[]')
+  _print_results RESULTS 
+}
 
 # --- Main Execution Block ---
 _curl_api_method
