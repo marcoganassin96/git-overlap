@@ -71,6 +71,43 @@ fi
 
 # --- Function Definitions ---
 
+# Function to check and prompt for dependency installation
+check_dependencies() {
+  local missing_deps=0
+
+  # 1. Check for 'jq'
+  if ! command -v jq &> /dev/null; then
+    echo "❌ Dependency 'jq' not found. 'jq' is required for efficient JSON processing." >&2
+    missing_deps=1
+  fi
+  
+  # 2. Check for 'gh' (GitHub CLI) - HIGHLY RECOMMENDED
+  if ! command -v gh &> /dev/null; then
+    echo "⚠️ Recommendation: 'gh' CLI not found. It is strongly recommended to install GitHub CLI for better performance, using the following instructions:" >&2
+    echo "  If you are using Linux (Debian/Ubuntu): sudo apt install gh" >&2
+    echo "  If you are using macOS (Homebrew): brew install gh" >&2
+    echo "  On Git Bash, use 'winget install GitHub.cli" >&2
+    echo "  The script will use the less efficient 'curl' fallback." >&2
+  fi
+
+  if [ $missing_deps -eq 1 ]; then
+    echo "--- SETUP REQUIRED ---" >&2
+    echo "Please install the missing dependencies before proceeding." >&2
+    echo "If you are using Linux (Debian/Ubuntu): sudo apt install jq" >&2
+    echo "If you are using macOS (Homebrew): brew install jq" >&2
+    echo "If you are using Windows/Git Bash: Please follows the folling instructions:" >&2
+    echo "  1  Open the PowerShell as Administrator." >&2
+    echo "  2. Use winget to install 'jq with winget install jqlang.jq' (as suggested in https://jqlang.org/download/)." >&2
+    echo "  3. Restart your PowerShell to apply the changes." >&2
+    echo "  4. In your PowerShell, use Get-Command jq.exe to verify the installation and get the executable location." >&2
+    echo "  5. Go to the location and copy the jq.exe file to your Git Bash bin directory (e.g., C:\Program Files\Git\usr\bin)." >&2
+    echo "     Creating a clone of jq.exe named only 'jq' without the .exe extension may help avoid issues." >&2
+    echo "  6. Restart the current Git Bash terminal to apply the changes." >&2
+    echo "  7. Retry running this script after installing jq." >&2
+    echo "----------------------" >&2
+    exit 1
+  fi
+}
 
 _print_results() {
   # Check RESULTS is the only parameter passed
@@ -307,4 +344,9 @@ get_github_pr_branches() {
 }
 
 # --- Main Execution Block ---
+
+# 1. Run the dependency check first
+check_dependencies
+
+# 2. Then proceed to the main logic wrapper
 get_github_pr_branches
