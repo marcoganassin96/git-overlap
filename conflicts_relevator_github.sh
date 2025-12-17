@@ -7,18 +7,27 @@ FILE_PATHS=()
 
 # Assume the remote URL is passed via a flag for clarity, e.g., --url
 usage() {
-  echo "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>]" >&2
-  echo "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>]" >&2
+  echo "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>] [--method <gh|api>]" >&2
+  echo "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>] [--method <gh|api>]" >&2
+  echo "" >&2
+  echo "Options:" >&2
+  echo "  --file     Path to file(s) to analyze (required)" >&2
+  echo "  --url      Remote repository URL (optional)" >&2
+  echo "  --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (optional)" >&2
   exit 1
 }
 
 # Initialize variables
 REMOTE_URL=""
+METHOD=""
 
 # --- Parsing Arguments ---
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --help|-h)
+            usage
+            ;;
         --file)
             # Ensure the value exists for --file
             if [[ -z "$2" || "$2" == --* ]]; then
@@ -40,6 +49,28 @@ while [[ $# -gt 0 ]]; do
             fi
             
             REMOTE_URL="$2"
+            shift 2 # Consume the flag and its value
+            ;;
+      
+        --method)
+            # Ensure the value exists for --method
+            if [[ -z "$2" || "$2" == --* ]]; then
+                echo "Error: Argument expected for $1." >&2
+                usage
+            fi
+            METHOD="$2"
+
+            # Allowed methods are 'gh' and 'api'
+            declare -a ALLOWED_METHODS=("gh" "api")
+
+            if [[ ! " ${ALLOWED_METHODS[*]} " =~ " ${METHOD} " ]]; then
+                last_idx=$((${#ALLOWED_METHODS[@]} - 1))
+                printf -v csv "'%s', " "${ALLOWED_METHODS[@]:0:$last_idx}"
+                formatted_methods="${csv%, } and '${ALLOWED_METHODS[$last_idx]}'"
+                echo "Error: Invalid method '$METHOD'. Allowed methods are $formatted_methods" >&2
+                exit 1
+            fi
+
             shift 2 # Consume the flag and its value
             ;;
         *)
@@ -330,7 +361,19 @@ _gh_cli_method() {
 }
 
 get_github_pr_branches() {
-  # Check if the 'gh' CLI tool is installed and available
+  # If a method is explicitly specified, use it
+  if [ -n "$METHOD" ]; then
+    if [ "$METHOD" = "gh" ]; then
+      echo "✅ Using the specified 'gh' CLI method." >&2
+      _gh_cli_method
+    elif [ "$METHOD" = "api" ]; then
+      echo "✅ Using the specified 'curl' API method." >&2
+      _curl_api_method
+    fi
+    return
+  fi
+  
+  # Otherwise, auto-detect the best available method
   if command -v gh &> /dev/null; then
     echo "✅ 'gh' CLI found. Using the efficient 'gh pr list' method." >&2
     _gh_cli_method
