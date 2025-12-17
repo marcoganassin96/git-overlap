@@ -249,7 +249,7 @@ _curl_api_method() {
   # -s suppresses the progress meter, keeping the output clean
   OPEN_PRS_RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
     -w "\nHTTP_STATUS:%{http_code}\n" \
-    "https://api.github.com/repos/${REPO_SLUG}/pulls?state=open&per_page=100"
+    "https://api.github.com/repos/${REPO_SLUG}/pulls?state=open&per_page=${PR_FETCH_LIMIT}"
   )
 
   # Grep for the line starting with "HTTP_STATUS:", then cut to get the code.
@@ -348,7 +348,7 @@ _gh_cli_method() {
   OPEN_PRS_RESPONSE=$(
     gh pr list \
       --repo "$REPO_SLUG" \
-      --limit 5 \
+      --limit $PR_FETCH_LIMIT \
       --json number,headRefName,files \
       --search "is:open is:unmerged"
   )
