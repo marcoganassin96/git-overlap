@@ -25,6 +25,9 @@ METHOD=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --help|-h)
+            usage
+            ;;
         --file)
             # Ensure the value exists for --file
             if [[ -z "$2" || "$2" == --* ]]; then
