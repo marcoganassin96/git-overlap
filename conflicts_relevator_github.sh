@@ -7,8 +7,13 @@ FILE_PATHS=()
 
 # Assume the remote URL is passed via a flag for clarity, e.g., --url
 usage() {
-  echo "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>]" >&2
-  echo "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>]" >&2
+  echo "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>] [--method <gh|api>]" >&2
+  echo "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>] [--method <gh|api>]" >&2
+  echo "" >&2
+  echo "Options:" >&2
+  echo "  --file     Path to file(s) to analyze (required)" >&2
+  echo "  --url      Remote repository URL (optional)" >&2
+  echo "  --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (optional)" >&2
   exit 1
 }
 
