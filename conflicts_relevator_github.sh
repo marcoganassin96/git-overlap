@@ -7,19 +7,21 @@ FILE_PATHS=()
 
 # Assume the remote URL is passed via a flag for clarity, e.g., --url
 usage() {
-  echo "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>] [--method <gh|api>]" >&2
-  echo "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>] [--method <gh|api>]" >&2
+  echo "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2
+  echo "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2
   echo "" >&2
   echo "Options:" >&2
   echo "  --file     Path to file(s) to analyze (required)" >&2
   echo "  --url      Remote repository URL (optional)" >&2
   echo "  --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (optional)" >&2
+  echo "  --limit    Maximum number of PRs to analyze (default: $PR_FETCH_LIMIT)" >&2
   exit 1
 }
 
 # Initialize variables
 REMOTE_URL=""
 METHOD=""
+LIMIT="$PR_FETCH_LIMIT"
 
 # --- Parsing Arguments ---
 
@@ -71,6 +73,23 @@ while [[ $# -gt 0 ]]; do
                 exit 1
             fi
 
+            shift 2 # Consume the flag and its value
+            ;;
+
+        --limit)
+            # Ensure the value exists for --limit
+            if [[ -z "$2" || "$2" == --* ]]; then
+                echo "Error: Argument expected for $1." >&2
+                usage
+            fi
+            
+            # Validate that the limit is a positive integer
+            if ! [[ "$2" =~ ^[1-9][0-9]*$ ]]; then
+                echo "Error: --limit must be a positive integer, got '$2'" >&2
+                exit 1
+            fi
+            
+            LIMIT="$2"
             shift 2 # Consume the flag and its value
             ;;
         *)
@@ -249,7 +268,7 @@ _curl_api_method() {
   # -s suppresses the progress meter, keeping the output clean
   OPEN_PRS_RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
     -w "\nHTTP_STATUS:%{http_code}\n" \
-    "https://api.github.com/repos/${REPO_SLUG}/pulls?state=open&per_page=${PR_FETCH_LIMIT}"
+    "https://api.github.com/repos/${REPO_SLUG}/pulls?state=open&per_page=${LIMIT}"
   )
 
   # Grep for the line starting with "HTTP_STATUS:", then cut to get the code.
@@ -348,7 +367,7 @@ _gh_cli_method() {
   OPEN_PRS_RESPONSE=$(
     gh pr list \
       --repo "$REPO_SLUG" \
-      --limit $PR_FETCH_LIMIT \
+      --limit $LIMIT \
       --json number,headRefName,files \
       --search "is:open is:unmerged"
   )
