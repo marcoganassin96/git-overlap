@@ -184,7 +184,7 @@ _print_results() {
   # @Returns (Integer): Exit code. 0 if the extraction is successful.
   ##
 _get_repo_full_name() {
-  REPO_FULL_NAME=$(echo "$1" | sed -E 's/.*[:/]([^/]+\/[^/]+)\.git$/\1/')
+  REPO_FULL_NAME=$(echo "$1" | sed -E 's/.*[:\/]([^/]+\/[^/.]+)(\.git)?$/\1/')
   echo "Debug: Parsed repository full name from REMOTE_URL: $REPO_FULL_NAME" >&2
 
   echo "$REPO_FULL_NAME" 
