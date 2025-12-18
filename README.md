@@ -48,6 +48,8 @@ PR #132: docs/readme
 |--------|-------------|---------|
 | `--file <path>` | File path to analyze (required, can be used multiple times) | `--file src/main.py` |
 | `--url <url>` | Git remote URL (optional, auto-detected if not provided) | `--url https://github.com/user/repo.git` |
+| `--method <gh|api>` | Method to use for querying provider: `gh` (GitHub CLI) or `api` (REST via curl). If omitted the script auto-detects the best available method. | `--method api` |
+| `--limit <number>` | Maximum number of open PRs to analyze (defaults to 200). Useful to cap work when repositories have many open PRs. | `--limit 100` |
 
 
 ## 🚀 Features
