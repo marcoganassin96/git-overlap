@@ -52,6 +52,13 @@ PR #132: docs/readme
 | `--limit <number>` | Maximum number of open PRs to analyze (defaults to 200). Useful to cap work when repositories have many open PRs. | `--limit 100` |
 
 
+### Environment Variables
+| Variable | Description | Example |
+|----------|-------------|---------
+| `GITHUB_TOKEN` | GitHub Personal Access Token for API authentication (required if using API method) | `export GITHUB_TOKEN='your_token_here'` |
+| `DEBUG` | Enable logging debug messages when set to `1` | `export DEBUG=1` |
+
+
 ## 🚀 Features
 
 - **Multi-Provider Support**: Currently works with GitHub. In the future, support for Bitbucket and GitLab will be added.
@@ -137,7 +144,8 @@ Find out if someone else is already working on the same files/features you're th
 ### 3. Pre-Merge Conflict Detection
 Check for potential conflicts before creating a PR
 
-### 4. Release Planning
+
+## 🚀 Release Planning
 - Implmenentation for BitBucket provider
 - Implementation for GitLab provider
 - Auto-detection of files in current working branch as default --file input
