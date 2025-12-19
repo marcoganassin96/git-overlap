@@ -4,14 +4,14 @@
 
 # Assume the remote URL is passed via a flag for clarity, e.g., --url
 usage() {
-  echo "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2
-  echo "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2
-  echo "" >&2
-  echo "Options:" >&2
-  echo "  --file     Path to file(s) to analyze (required)" >&2
-  echo "  --url      Remote repository URL (optional)" >&2
-  echo "  --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (optional)" >&2
-  echo "  --limit    Maximum number of PRs to analyze (default: $PR_FETCH_LIMIT)" >&2
+  log_info "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2
+  log_info "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2
+  log_info "" >&2
+  log_info "Options:" >&2
+  log_info "  --file     Path to file(s) to analyze (required)" >&2
+  log_info "  --url      Remote repository URL (optional)" >&2
+  log_info "  --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (optional)" >&2
+  log_info "  --limit    Maximum number of PRs to analyze (default: $PR_FETCH_LIMIT)" >&2
   exit 1
 }
 
@@ -62,7 +62,7 @@ common_parse_args() {
           --url|--remote-url)
               # Ensure the value exists for the URL
               if [[ -z "$2" || "$2" == --* ]]; then
-                  echo "Error: Argument expected for $1." >&2
+                  log_error "Error: Argument expected for $1." >&2
                   usage
               fi
               
@@ -73,7 +73,7 @@ common_parse_args() {
           --method)
               # Ensure the value exists for --method
               if [[ -z "$2" || "$2" == --* ]]; then
-                  echo "Error: Argument expected for $1." >&2
+                  log_error "Argument expected for $1." >&2
                   usage
               fi
               METHOD="$2"
@@ -85,7 +85,7 @@ common_parse_args() {
                   last_idx=$((${#ALLOWED_METHODS[@]} - 1))
                   printf -v csv "'%s', " "${ALLOWED_METHODS[@]:0:$last_idx}"
                   formatted_methods="${csv%, } and '${ALLOWED_METHODS[$last_idx]}'"
-                  echo "Error: Invalid method '$METHOD'. Allowed methods are $formatted_methods" >&2
+                  log_error "Invalid method '$METHOD'. Allowed methods are $formatted_methods" >&2
                   exit 1
               fi
 
@@ -95,13 +95,13 @@ common_parse_args() {
           --limit)
               # Ensure the value exists for --limit
               if [[ -z "$2" || "$2" == --* ]]; then
-                  echo "Error: Argument expected for $1." >&2
+                  log_error "Argument expected for $1." >&2
                   usage
               fi
               
               # Validate that the limit is a positive integer
               if ! [[ "$2" =~ ^[1-9][0-9]*$ ]]; then
-                  echo "Error: --limit must be a positive integer, got '$2'" >&2
+                  log_error "--limit must be a positive integer, got '$2'" >&2
                   exit 1
               fi
               
@@ -110,7 +110,7 @@ common_parse_args() {
               ;;
           *)
               # Handle any unknown positional arguments or flags
-              echo "Error: Unknown argument '$1'" >&2
+              log_error "Unknown argument '$1'" >&2
               usage
               ;;
       esac
@@ -120,7 +120,7 @@ common_parse_args() {
 
   # 1. Validate if --file was provided
   if [ ${#FILE_PATHS[@]} -eq 0 ]; then
-      echo "Error: The --file parameter is required." >&2
+      log_error "The --file parameter is required." >&2
       usage
   fi
 
@@ -131,7 +131,7 @@ common_parse_args() {
       
       # Optional: Add error handling if git fails
       if [ $? -ne 0 ] || [ -z "$REMOTE_URL" ]; then
-          echo "Warning: Could not determine REMOTE_URL using 'git remote -v'. Execution will be interrupted." >&2
+          log_error "Could not determine REMOTE_URL using 'git remote -v'. Execution will be interrupted." >&2
           exit 1
       fi
   fi
@@ -161,14 +161,14 @@ common_get_repo_slug() {
 
   # If nothing left after trimming, return empty
   if [ -z "$path" ]; then
-    echo "" >&2
+    log_info "" >&2
     echo "" 
     return 0
   fi
 
   # If the remaining path does not contain a slash, it's not a valid owner/repo form
   if [[ "$path" != */* ]]; then
-    echo "" >&2
+    log_info "" >&2
     echo "" 
     return 0
   fi
@@ -182,7 +182,7 @@ common_get_repo_slug() {
     REPO_SLUG="$path"
   fi
 
-  echo "Debug: Parsed repository slug from REMOTE_URL: $REPO_SLUG" >&2
+  log_debug "Parsed repository slug from REMOTE_URL: $REPO_SLUG" >&2
   echo "$REPO_SLUG"
   return 0
 }
@@ -201,11 +201,11 @@ common_print_results() {
   local -n file_to_prs=$1
 
   if [ ${#file_to_prs[@]} -eq 0 ]; then
-    echo "None of the specified files are modified in open PRs." >&2
+    log_info "None of the specified files are modified in open PRs." >&2
     return 0
   fi
 
-  echo "--- Results ---"
+  log_info "--- Results ---"
   # For each entry (File path) in file_to_prs, print the list of PR branch and PR ID
   # Assume file_to_prs is an associative array populated elsewhere, e.g.:
   #   file_to_prs["utils/llm.py"]="101,feature/llm-update_;102,bugfix/llm-patch"
@@ -224,6 +224,6 @@ common_print_results() {
           IFS=',' read -r pr_name pr_id <<< "$entry"
           file_output+="\nPR #${pr_id}: ${pr_name}"
       done
-      echo -e "$file_output"
+      log_info -e "$file_output"
   done
 }
