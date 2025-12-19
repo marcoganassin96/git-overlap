@@ -239,7 +239,8 @@ _curl_api_method() {
     done
   done < <(echo "$OPEN_PRS_JSON" | jq -c '.[]')
 
-  _print_results RESULTS
+  # Delegate to common_results_print which uses the centralized RESULTS associative array
+  common_print_results RESULTS
 }
 
 _gh_cli_method() {
@@ -295,7 +296,9 @@ _gh_cli_method() {
       done
     done
   done < <(echo "$OPEN_PRS_RESPONSE" | jq -c '.[]')
-  _print_results RESULTS 
+
+  # Delegate to common_results_print which uses the centralized RESULTS associative array
+  common_print_results RESULTS
 }
 
 get_github_pr_branches() {

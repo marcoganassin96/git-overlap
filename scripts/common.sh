@@ -186,3 +186,44 @@ common_get_repo_slug() {
   echo "$REPO_SLUG"
   return 0
 }
+
+##
+# @Function: common_print_results
+# @Description: Print the results of files modified in open PRs.
+# @Param 1 (Associative Array) file_to_prs: Associative array where keys are file paths and values are strings formatted as "PR_ID,PR_NAME;PR_ID,PR_NAME;..."
+#   Example:
+#     ([ "utils/llm.py" ]="101,feature/llm-update_;102,bugfix/llm-patch" [ "README.md" ]="105,doc-fix" )
+# @Output: Prints the results to standard output.
+# @Returns (Integer): Exit code. 0 if successful, 1 on error.
+##
+common_print_results() {
+  # Check RESULTS is the only parameter passed
+  local -n file_to_prs=$1
+
+  if [ ${#file_to_prs[@]} -eq 0 ]; then
+    echo "None of the specified files are modified in open PRs." >&2
+    return 0
+  fi
+
+  echo "--- Results ---"
+  # For each entry (File path) in file_to_prs, print the list of PR branch and PR ID
+  # Assume file_to_prs is an associative array populated elsewhere, e.g.:
+  #   file_to_prs["utils/llm.py"]="101,feature/llm-update_;102,bugfix/llm-patch"
+  #   file_to_prs["README.md"]="105,doc-fix"
+
+  # Iterate over all keys in the associative array
+  for file_name in "${!file_to_prs[@]}"; do
+      # 1. Retrieve the value (e.g., "101,feature/llm-update")
+      file_output="File: **$file_name** is modified in PRs: "
+      value="${file_to_prs[$file_name]}"
+
+      # 2. Use ; to split multiple PR entries
+      IFS=';' read -r -a pr_entries <<< "$value"
+      # 3. For each entry, split by , to get PR ID and PR name
+      for entry in "${pr_entries[@]}"; do
+          IFS=',' read -r pr_name pr_id <<< "$entry"
+          file_output+="\nPR #${pr_id}: ${pr_name}"
+      done
+      echo -e "$file_output"
+  done
+}
