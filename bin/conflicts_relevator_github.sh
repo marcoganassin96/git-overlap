@@ -1,6 +1,6 @@
 #!/bin/bash
 THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR" && pwd)"
+PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 
 # Source shared helpers
 . "$PROJECT_ROOT_DIR/lib/logging.sh"
