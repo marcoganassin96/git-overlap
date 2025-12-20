@@ -21,11 +21,13 @@ _run() {
   local start_dir="$2"
   # copy project_root.sh next to the working dir to mimic various layouts
   cp "$proj_root_src" "$start_dir/project_root.sh"
-  (cd "$start_dir" && . ./project_root.sh && compute_project_root "$start_dir")
-  echo "$PROJECT_ROOT"
+  # run in a subshell and print PROJECT_ROOT so the caller can capture it
+  local out
+  out=$(cd "$start_dir" && . ./project_root.sh && compute_project_root "$start_dir" && printf "%s" "$PROJECT_ROOT")
+  printf "%s" "$out"
 }
 
-REPO_TOP="$(pwd -P)"
+REPO_TOP="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd -P)"
 PRJ_SRC="$REPO_TOP/project_root.sh"
 if [ ! -f "$PRJ_SRC" ]; then
   echo "ERROR: project_root.sh not found at $PRJ_SRC" >&2
