@@ -5,7 +5,7 @@ THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/../.." && pwd)"
 
 # Source shared helpers
-. "$PROJECT_ROOT_DIR/scripts/common.sh"
+. "$PROJECT_ROOT_DIR/lib/common.sh"
 
 # Simple assertion helper
 _failures=0
