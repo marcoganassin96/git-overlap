@@ -7,7 +7,7 @@ A powerful multi-provider tool that helps developers identify files overlaps and
 
 ### 📊 Example
 ```bash
-$ ./conflicts_relevator_github.sh --file src/main.py,README.md,src/foo.py
+$ ./bin/conflicts_relevator_github.sh --file src/main.py,README.md,src/foo.py
 
 Debug: Parsed repository full name from REMOTE_URL: https://github.com/marcoganassin96/git-conflicts-predictor
 🔑 Searching GitHub for PRs modifying 2 file(s) via gh CLI...
@@ -27,19 +27,19 @@ PR #132: docs/readme
 ### Basic Usage
 ```bash
 # Analyze a single file
-./conflicts_relevator_github.sh --file src/main.py
+./bin/conflicts_relevator_github.sh --file src/main.py
 
 # Analyze multiple files
-./conflicts_relevator_github.sh --file src/main.py --file README.md
+./bin/conflicts_relevator_github.sh --file src/main.py --file README.md
 
 # Analyze comma-separated files
-./conflicts_relevator_github.sh --file "src/main.py,README.md,package.json"
+./bin/conflicts_relevator_github.sh --file "src/main.py,README.md,package.json"
 ```
 
 ### Advanced Usage
 ```bash
 # Analyze different repository
-./conflicts_relevator_github.sh --file config.yaml --url https://github.com/other-org/other-repo.git
+./bin/conflicts_relevator_github.sh --file config.yaml --url https://github.com/other-org/other-repo.git
 ```
 
 ### Command Line Options

@@ -2,6 +2,12 @@
 # common.sh - shared utilities for git-conflicts-predictor scripts
 # Requires: bash 4+ (associative arrays), jq
 
+THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
+
+# Source shared helpers
+. "$PROJECT_ROOT_DIR/lib/logging.sh"
+
 # Assume the remote URL is passed via a flag for clarity, e.g., --url
 usage() {
   log_info "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2

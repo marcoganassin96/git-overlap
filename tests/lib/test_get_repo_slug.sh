@@ -1,22 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_SCRIPT="$(dirname "$0")/../../scripts/common.sh"
+THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/../.." && pwd)"
 
-if [ ! -f "$REPO_SCRIPT" ]; then
-  echo "ERROR: script not found: $REPO_SCRIPT" >&2
-  exit 2
-fi
-
-# Extract only the common_get_repo_slug function definition from the script and eval it
-FUNC_DEF=$(sed -n '/^common_get_repo_slug() {/,/^}/p' "$REPO_SCRIPT")
-# Ensure we actually extracted something
-if [ -z "$FUNC_DEF" ]; then
-  echo "ERROR: could not extract common_get_repo_slug from $REPO_SCRIPT" >&2
-  exit 2
-fi
-
-eval "$FUNC_DEF"
+# Source shared helpers
+. "$PROJECT_ROOT_DIR/lib/common.sh"
 
 # Simple assertion helper
 _failures=0

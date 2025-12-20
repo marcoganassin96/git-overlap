@@ -1,9 +1,10 @@
 #!/bin/bash
+THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 
 # Source shared helpers
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-. "$SCRIPT_DIR/scripts/logging.sh"
-. "$SCRIPT_DIR/scripts/common.sh"
+. "$PROJECT_ROOT_DIR/lib/logging.sh"
+. "$PROJECT_ROOT_DIR/lib/common.sh"
 
 # common_parse_args will populate: FILE_PATHS, REMOTE_URL, METHOD, LIMIT
 common_parse_args "$@"
