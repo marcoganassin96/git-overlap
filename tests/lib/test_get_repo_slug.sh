@@ -3,45 +3,53 @@ set -euo pipefail
 
 THIS_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/../.." && pwd)"
+TEST_DIR="$PROJECT_ROOT_DIR/tests"
 
 # Source shared helpers
 . "$PROJECT_ROOT_DIR/lib/common.sh"
 
-# Simple assertion helper
-_failures=0
-_assert_eq() {
-  local expected="$1"
-  local input="$2"
-  local out
-  out=$( common_get_repo_slug "$input" ) || out=""
-  # Trim whitespace
-  out=$(printf "%s" "$out" | sed -E 's/^\s+|\s+$//g')
-  if [ "$out" != "$expected" ]; then
-    echo "FAIL: input='$input' => expected='$expected' but got='$out'"
-    _failures=$((_failures + 1))
-  else
-    echo "PASS: input='$input' => '$out'"
-  fi
+# Define individual test functions (must start with 'test')
+
+testSshGitUrl() {
+  local out=$(common_get_repo_slug "git@github.com:owner/repo.git")
+  assertEquals "owner/repo" "$out"
 }
 
-# Test cases
-_assert_eq "owner/repo" "git@github.com:owner/repo.git"
-_assert_eq "owner/repo" "https://github.com/owner/repo.git"
-_assert_eq "owner/repo" "https://github.com/owner/repo"
-_assert_eq "owner/my.repo" "git@github.com:owner/my.repo.git"
-_assert_eq "owner/repo" "git@github.com:owner/repo"
-# For paths with more than two components, expect the last two (e.g., group/subgroup/repo -> subgroup/repo)
-_assert_eq "subgroup/repo" "https://gitlab.com/group/subgroup/repo.git"
+testHttpsGitUrlWithDotGit() {
+  local out=$(common_get_repo_slug "https://github.com/owner/repo.git")
+  assertEquals "owner/repo" "$out"
+}
 
-# Edge cases
-_assert_eq "" ""
-_assert_eq "" "not-a-url"
+testHttpsGitUrlWithoutDotGit() {
+  local out=$(common_get_repo_slug "https://github.com/owner/repo")
+  assertEquals "owner/repo" "$out"
+}
 
-if [ "$_failures" -ne 0 ]; then
-  # Print failure summary in red
-  printf "\033[31m%d test(s) failed.\033[0m\n" "$_failures" >&2
+testDotsInRepoName() {
+  local out=$(common_get_repo_slug "git@github.com:owner/my.repo.git")
+  assertEquals "owner/my.repo" "$out"
+}
+
+testNestedGitLabPaths() {
+  local out=$(common_get_repo_slug "https://gitlab.com/group/subgroup/repo.git")
+  assertEquals "subgroup/repo" "$out"
+}
+
+testEmptyInput() {
+  local out=$(common_get_repo_slug "")
+  assertEquals "" "$out"
+}
+
+testInvalidUrl() {
+  local out=$(common_get_repo_slug "not-a-url")
+  assertEquals "" "$out"
+}
+
+# 4. Load shunit2 (This executes the tests)
+# If you don't have it installed, you can curl it or point to a local copy
+if [ -f "$TEST_DIR/shunit2" ]; then
+  . "$TEST_DIR/shunit2"
+else
+  echo "Error: shunit2 executable not found in $TEST_DIR."
   exit 1
 fi
-
-# Print success message in green
-printf "\033[32mAll tests passed.\033[0m\n"
