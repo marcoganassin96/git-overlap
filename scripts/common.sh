@@ -1,4 +1,39 @@
 #!/usr/bin/env bash
+# Resolve the directory of this script (support symlinks)
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" >/dev/null 2>&1 && pwd)"
+
+# Function to find project root by looking for a marker file (.project-root) or .git or README.md
+find_project_root() {
+  local dir="$1"
+  while [ "$dir" != "/" ] && [ -n "$dir" ]; do
+    if [ -e "$dir/.project-root" ] || [ -d "$dir/.git" ] || [ -e "$dir/README.md" ]; then
+      printf '%s' "$dir"
+      return 0
+    fi
+    dir=$(dirname "$dir")
+  done
+  return 1
+}
+
+# Compute PROJECT_ROOT (prefer git top-level, else marker, else script dir)
+if git_root="$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null)"; then
+  PROJECT_ROOT="$git_root"
+else
+  if root_from_marker="$(find_project_root "$SCRIPT_DIR")"; then
+    PROJECT_ROOT="$root_from_marker"
+  else
+    PROJECT_ROOT="$SCRIPT_DIR"
+  fi
+fi
+
+export PROJECT_ROOT
+export SCRIPT_DIR
 # common.sh - shared utilities for git-conflicts-predictor scripts
 # Requires: bash 4+ (associative arrays), jq
 
