@@ -6,9 +6,6 @@ PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 . "$PROJECT_ROOT_DIR/lib/logging.sh"
 . "$PROJECT_ROOT_DIR/lib/common.sh"
 
-# common_parse_args will populate: FILE_PATHS, REMOTE_URL, METHOD, LIMIT
-common_parse_args "$@"
-
 # --- Function Definitions ---
 
 # Function to check and prompt for dependency installation
@@ -281,10 +278,18 @@ get_github_pr_branches() {
   fi
 }
 
+relevate_conflicts(){
+  # common_parse_args will populate: FILE_PATHS, REMOTE_URL, METHOD, LIMIT
+  common_parse_args "$@"
+
+  # 1. Run the dependency check first
+  check_dependencies
+
+  # 2. Then proceed to the main logic wrapper
+  get_github_pr_branches "$@"
+}
+
 # --- Main Execution Block ---
-
-# 1. Run the dependency check first
-check_dependencies
-
-# 2. Then proceed to the main logic wrapper
-get_github_pr_branches
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  relevate_conflicts "$@"
+fi

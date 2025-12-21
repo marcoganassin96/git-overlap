@@ -59,8 +59,8 @@ manage_conflicts_relevation()
     # Print debug info
     log_debug "Executing $PROVIDER_SCRIPT_RELATIVE with arguments: ${ORIGINAL_ARGS[*]}"
 
-    source "$PROVIDER_SCRIPT" "${ORIGINAL_ARGS[@]}"
-
+    source "$PROVIDER_SCRIPT"
+    relevate_conflicts "${ORIGINAL_ARGS[@]}"
     exit $?
   else
     echo "Error: Provider script $PROVIDER_SCRIPT not found." >&2
