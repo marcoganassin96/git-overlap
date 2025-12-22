@@ -11,6 +11,11 @@ PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 
 manage_conflicts_relevation()
 {
+  # Capture the first argument as the reference name
+  local -n results=$1
+  # Remove the first argument (the variable name) from the list
+  shift
+
   # Define the path to the provider-specific scripts
   GITHUB_SCRIPT="$PROJECT_ROOT_DIR/lib/conflicts_relevator_github.sh"
 
@@ -60,8 +65,8 @@ manage_conflicts_relevation()
     log_debug "Executing $PROVIDER_SCRIPT_RELATIVE with arguments: ${ORIGINAL_ARGS[*]}"
 
     source "$PROVIDER_SCRIPT"
-    relevate_conflicts "${ORIGINAL_ARGS[@]}"
-    exit $?
+    relevate_conflicts results "${ORIGINAL_ARGS[@]}"
+    return $?
   else
     echo "Error: Provider script $PROVIDER_SCRIPT not found." >&2
     exit 1
@@ -70,5 +75,9 @@ manage_conflicts_relevation()
 
 # --- Main Execution Block ---
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-  manage_conflicts_relevation "$@"
+  # Define a global associative array to hold the output for the CLI run
+  declare -A MAIN_RESULTS
+  
+  # Pass the NAME of that array as the first argument
+  manage_conflicts_relevation MAIN_RESULTS "$@"
 fi
