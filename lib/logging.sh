@@ -30,7 +30,7 @@ log() {
 }
 
 log_info() {
-  printf "[INFO] $*" 1>&2
+  printf "[INFO] $*\n" 1>&2
 }
 
 log_warn() {
