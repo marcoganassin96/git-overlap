@@ -55,12 +55,13 @@ PR #132: docs/readme
 | Variable | Description | Example |
 |----------|-------------|---------
 | `GITHUB_TOKEN` | GitHub Personal Access Token for API authentication (required if using API method) | `export GITHUB_TOKEN='your_token_here'` |
+| `BITBUCKET_TOKEN` | Bitbucket Token for API authentication (required for Bitbucket API method) | `export BITBUCKET_TOKEN='your_token_here'` |
 | `DEBUG` | Enable logging debug messages when set to `1` | `export DEBUG=1` |
 
 
 ## 🚀 Features
 
-- **Multi-Provider Support**: Currently works with GitHub. In the future, support for Bitbucket and GitLab will be added.
+- **Multi-Provider Support**: Currently works with GitHub and Bitbucket. GitLab support is planned.
 - **Automatic Provider Detection**: Automatically detects the Git hosting provider from remote URLs
 - **Flexible Input**: Support for overlap detection with multiple files and custom remote repo. In future, files you're working on will be used by default.
 - **Multiple Access Methods**: Uses CLI tools (like `gh` for GitHub) when available for better performance, otherwise falls back to REST API.
@@ -84,12 +85,12 @@ Check for potential conflicts before creating a PR
 | Provider | CLI Tool | API Method | Authentication | Working Status |
 |----------|----------|------------|----------------|----------------|
 | **GitHub** | `gh` (recommended) | REST API | `GITHUB_TOKEN` | ✅ Fully Supported |
-| **Bitbucket** | N/A | REST API | `BITBUCKET_TOKEN` + `BITBUCKET_USERNAME` | 🛠 Work in Progress |
+| **Bitbucket** | N/A | REST API | `BITBUCKET_TOKEN` | ✅ Added (API)
 | **GitLab** | `glab` (recommended) | REST API | `GITLAB_TOKEN` | 🛠 Work in Progress |
 
 
 ## 🚀 Release Planning
-- Implmenentation for BitBucket provider
+- Bitbucket provider: added (API-based implementation)
 - Implementation for GitLab provider
 - Auto-detection of files in current working branch as default --file input
 - Publish as installable package (e.g., via homebrew)
