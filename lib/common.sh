@@ -8,7 +8,12 @@ PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 # Source shared helpers
 . "$PROJECT_ROOT_DIR/lib/logging.sh"
 
-# Assume the remote URL is passed via a flag for clarity, e.g., --url
+##
+# @Function: usage
+# @Description: Print usage information for scripts using common.sh
+# @Output: Prints usage information to standard output.
+# @Returns (Integer): Exit code. Always 1.
+##
 usage() {
   log_info "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2
   log_info "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2

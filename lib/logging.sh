@@ -2,9 +2,31 @@
 # logging.sh - terminal and logging helpers for git-conflicts-predictor
 # Provides: log_info, log_warn, log_error, log_debug, log_progress
 
-# Basic logging
+# Define colors for logging levels - Using ANSI escape codes for portability
+GREEN="\033[32m"
+YELLOW="\033[33m"
+RED="\033[31m"
+GRAY="\033[90m"
+NC="\033[0m" # No Color
+
+##
+# @Function: log
+# @Description: General logging function with optional color
+# @Params:
+#   $1 - Message to log
+#   $2 - (Optional) Color code
+# @Output: Prints the message to standard error with optional color.
+# @Returns (Integer): Exit code. Always 0.
+##
 log() {
-  echo -e "$*" 1>&2
+  local message="$1"
+  local color="${2:-}"
+  if [ -n "$color" ]; then
+    echo -e "${color}${message}${NC}" 1>&2
+  else
+    echo -e "$message" 1>&2
+  fi
+  return 0
 }
 
 log_info() {
@@ -12,19 +34,16 @@ log_info() {
 }
 
 log_warn() {
-  # Print in yellow color
-  printf "\033[33m[WARN] %s\033[0m\n" "$*" 1>&2
+  printf "${YELLOW}[WARN] %s${NC}\n" "$*" 1>&2
 }
 
 log_error() {
-  # Print in red color
-  printf "\033[31m[ERROR] %s\033[0m\n" "$*" 1>&2
+  printf "${RED}[ERROR] %s${NC}\n" "$*" 1>&2
 }
 
 log_debug() {
   if [ "${DEBUG:-}" = "1" ]; then
-    # Print in dark gray
-    printf "\033[90m[DEBUG] %s\033[0m\n" "$*" 1>&2
+    printf "${GRAY}[DEBUG] %s${NC}\n" "$*" 1>&2
   fi
 }
 

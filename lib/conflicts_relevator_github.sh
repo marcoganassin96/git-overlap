@@ -6,9 +6,6 @@ PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 . "$PROJECT_ROOT_DIR/lib/logging.sh"
 . "$PROJECT_ROOT_DIR/lib/common.sh"
 
-# common_parse_args will populate: FILE_PATHS, REMOTE_URL, METHOD, LIMIT
-common_parse_args "$@"
-
 # --- Function Definitions ---
 
 # Function to check and prompt for dependency installation
@@ -40,7 +37,23 @@ check_dependencies() {
   fi
 }
 
+##
+# @Function: _curl_api_method
+# @Description: Use GitHub REST API via curl to find PRs modifying specified files.
+# @Param 1 (Array) FILE_PATHS: Array of file paths to check.
+#   Example: ("path/to/file1.py" "docs/README.md")
+# @Param 2 (String) REMOTE_URL: Git remote URL of the repository.
+#   Example: "
+# @Param 3 (String) LIMIT: Maximum number of PRs to analyze.
+#   Example: "50"
+# @Output (Associative Array): Prints the results to standard output.
+#       ([ "utils/llm.py" ]="101,feature/llm-update_;102,bugfix/llm-patch" [ "README.md" ]="105,doc-fix" )
+# @Returns (Integer): Exit code. 0 if successful, 1 on error.
+##
 _curl_api_method() {
+  # Initialize an array to store the final results: "file_path,branch_name"
+  local -n RESULTS=$1
+
   log_info "Searching GitHub for PRs modifying ${#FILE_PATHS[@]} file(s) via curl..."
 
   if [ -z "$GITHUB_TOKEN" ]; then
@@ -127,9 +140,6 @@ _curl_api_method() {
   # Clean target files from leading/trailing whitespace
   mapfile -t CLEANED_TARGET_FILES < <(printf '%s\n' "${FILE_PATHS[@]}" | sed -E 's/^\s+|\s+$//g')
 
-  # Initialize an array to store the final results: "file_path,branch_name"
-  declare -A RESULTS
-
   counter=1
   while IFS= read -r PR_OBJECT; do
 
@@ -192,9 +202,30 @@ _curl_api_method() {
   
   # Delegate to common_results_print which uses the centralized RESULTS associative array
   common_print_results RESULTS
+  return 0
 }
 
+
+
+##
+# @Function: _gh_cli_method
+# @Description: Use GitHub CLI to find PRs modifying specified files.
+# @Param 1 (Array) FILE_PATHS: Array of file paths to check.
+#   Example: ("path/to/file1.py" "docs/README.md")
+# @Param 2 (String) REMOTE_URL: Git remote URL of the repository.
+#   Example: "https://github.com/owner/repo.git" 
+#  @Param 3 (String) LIMIT: Maximum number of PRs to analyze.
+#   Example: "50"
+#  @Param 4 (String) METHOD: Method to use ('gh' or 'api').
+#   Example: "gh" or "api"
+# @Output (Associative Array): Prints the results to standard output.
+#       ([ "utils/llm.py" ]="101,feature/llm-update_;102,bugfix/llm-patch" [ "README.md" ]="105,doc-fix" )
+# @Returns (Integer): Exit code. 0 if successful, 1 on error.
+##
 _gh_cli_method() {
+  # Initialize an array to store the final results: "file_path,branch_name"
+  local -n RESULTS=$1
+
   log_info "Searching GitHub for PRs modifying ${#FILE_PATHS[@]} file(s) via gh..."
   REPO_SLUG=$(common_get_repo_slug "$REMOTE_URL")
   
@@ -220,8 +251,6 @@ _gh_cli_method() {
     exit 1
   fi
   
-  # Initialize an array to store the final results: "file_path,branch_name"
-  declare -A RESULTS
   # Iterate over each PR object in the JSON array
   PR_COUNT=$(echo "$OPEN_PRS_RESPONSE" | jq 'length')
   log_debug "Analyzing $PR_COUNT open PR(s) in the repository..."
@@ -253,38 +282,81 @@ _gh_cli_method() {
 
   # Delegate to common_results_print which uses the centralized RESULTS associative array
   common_print_results RESULTS
+  return 0
 }
 
+##
+# @Function: get_github_pr_branches
+# @Description: Wrapper function to select the method (gh or curl) to get PR branches
+# @Param 1 (Associative Array) method_result: Name of the associative array to store the results.
+# @Output: Populates the provided associative array with results.
+# @Returns (Integer): Exit code. 0 if successful, 1 on error.
+##
 get_github_pr_branches() {
+  local -n method_result=$1
+
   # If a method is explicitly specified, use it
   if [ -n "$METHOD" ]; then
     if [ "$METHOD" = "gh" ]; then
       echo "✅ Using the specified 'gh' CLI method." >&2
-      _gh_cli_method
+      _gh_cli_method method_result
     elif [ "$METHOD" = "api" ]; then
       echo "✅ Using the specified 'curl' API method." >&2
-      _curl_api_method
+      _curl_api_method method_result
     fi
-    return
+    return 0
   fi
   
   # Otherwise, auto-detect the best available method
   if command -v gh &> /dev/null; then
     echo "✅ 'gh' CLI found. Using the efficient 'gh pr list' method." >&2
-    _gh_cli_method
+    _gh_cli_method method_result
   elif command -v curl &> /dev/null; then
     echo "⚠️ 'gh' CLI not found. Falling back to the slower 'curl' API method." >&2
-    _curl_api_method
+    _curl_api_method method_result
   else
     echo "❌ Error: Neither 'gh' CLI nor 'curl' is installed. Cannot proceed." >&2
     exit 1
   fi
+  return 0
+}
+
+##
+# @Function: relevate_conflicts
+# @Description: Main function to relevate conflicts using GitHub as provider.
+#
+# @Param 1 (Associative Array) results: Name of the associative array to store the results where keys are file paths and values are strings formatted as "PR_BRANCH,PR_ID;PR_BRANCH,PR_ID;..."
+# @Param 2 (String) --file: Comma-separated list of file paths to check.
+# @Param 3 (String) --url: Git remote URL of the repository.
+# @Param 4 (String) [--method]: Optional. Method to use ('gh' or 'api').
+# @Param 5 (String) [--limit]: Optional. Maximum number of PRs to analyze.
+#
+# @Output: Populates the provided associative array with results.
+# @Returns (Integer): Exit code. 0 if successful, 1 on error.
+##
+relevate_conflicts(){
+  # Capture the first argument as the reference name
+  local -n github_results=$1
+
+  # Remove the first argument (the variable name) from the list
+  shift
+
+  # common_parse_args will populate: FILE_PATHS, REMOTE_URL, METHOD, LIMIT - The first argument (result) is removed 
+  common_parse_args "$@"
+
+  # 1. Run the dependency check first
+  check_dependencies
+
+  # 2. Then proceed to the main logic wrapper
+  get_github_pr_branches github_results "$@"
+  return 0
 }
 
 # --- Main Execution Block ---
-
-# 1. Run the dependency check first
-check_dependencies
-
-# 2. Then proceed to the main logic wrapper
-get_github_pr_branches
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  # Define a global associative array to hold the output for the CLI run
+  local -A MAIN_RESULTS
+  
+  # Pass the NAME of that array as the first argument
+  relevate_conflicts MAIN_RESULTS "$@"
+fi
