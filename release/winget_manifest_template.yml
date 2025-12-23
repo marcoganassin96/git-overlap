@@ -1,0 +1,29 @@
+# Winget manifest template for Git Conflicts Predictor
+# Replace placeholders and submit to https://github.com/microsoft/winget-pkgs
+
+PackageIdentifier: YourPublisher.GitConflictsPredictor          # e.g. marcoganassin96.GitConflictsPredictor
+PackageVersion: "0.0.0"                                       # e.g. "1.2.0"
+Channel: stable
+PackageLocale: en-US
+Publisher: Your Name or Organization                             # e.g. "Marco Ganassin"
+PackageName: Git Conflicts Predictor
+License: MIT                                                     # Adjust as needed
+ShortDescription: Detect files edited in open PRs or branches early to avoid conflicts
+PackageUrl: https://github.com/youruser/git-conflicts-predictor  # Replace
+Commands:
+  - conflicts_relevator
+
+Installers:
+  - Architecture: x64
+    InstallerType: zip                                           # or msi / exe
+    InstallerUrl: https://github.com/youruser/git-conflicts-predictor/releases/download/v{PackageVersion}/git-conflicts-predictor-{PackageVersion}-win.zip
+    InstallerSha256: "<REPLACE_WITH_SHA256>"
+    Locale: en-US
+
+# Notes for submission:
+# 1) Compute SHA256 for the release zip (PowerShell):
+#    Get-FileHash .\git-conflicts-predictor-<version>-win.zip -Algorithm SHA256 | Select-Object -ExpandProperty Hash
+# 2) Replace placeholders: PackageIdentifier, PackageVersion, Publisher, PackageUrl, InstallerUrl, InstallerSha256.
+# 3) Follow winget-pkgs repository structure and contribution guide: https://github.com/microsoft/winget-pkgs/blob/master/CONTRIBUTING.md
+#    Manifests are typically placed under: manifests\<first-letter-of-publisher>\<publisher>\<package>\<version>\<arch>.yaml
+# 4) Use wingetcreate or the community PR process to submit your manifest.
