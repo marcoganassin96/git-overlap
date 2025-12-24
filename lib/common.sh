@@ -15,14 +15,29 @@ PROJECT_ROOT_DIR="$(cd "$THIS_SCRIPT_DIR/.." && pwd)"
 # @Returns (Integer): Exit code. Always 1.
 ##
 usage() {
-  log_info "Usage: $0 --file <path/to/file1> [--file <path/to/file2> ...] [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2
-  log_info "       Or: $0 --file <path/to/file1,path/to/file2,...> [--url <remote_url>] [--method <gh|api>] [--limit <number>]" >&2
-  log_info "" >&2
-  log_info "Options:" >&2
-  log_info "  --file     Path to file(s) to analyze (required)" >&2
-  log_info "  --url      Remote repository URL (optional)" >&2
-  log_info "  --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (optional)" >&2
-  log_info "  --limit    Maximum number of PRs to analyze (default: $PR_FETCH_LIMIT)" >&2
+
+  # v | --version] [-h | --help] [-C <path>] [-c <name>=<value>]
+  #          [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+  #          [-p | --paginate | -P | --no-pager] [--no-replace-objects] [--bare]
+  #          [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
+  #          [--config-env=<name>=<envvar>] <command> [<args>]
+
+  log "Usage: $0 [-f | --file] <path/to/file1> [[-f | --file] <path/to/file2> ...] [[-u | --url] <remote_url>] [[-m | --method] <gh|api>] [[-l | --limit] <number>]" >&2
+  log "       Or: $0 [-f | --file] <path/to/file1,path/to/file2,...> [[-u | --url] <remote_url>] [[-m | --method] <gh|api>] [[-l | --limit] <number>]" >&2
+  log "" >&2
+  log "Options:" >&2
+  log "  -f | --file     Path to file(s) to analyze (required)" >&2
+  log "  -u | --url      Remote repository URL (optional)" >&2
+  log "  -m | --method   Method to use: 'gh' (GitHub CLI) or 'api' (REST API) (optional)" >&2
+  log "  -l | --limit    Maximum number of PRs to analyze (default: $PR_FETCH_LIMIT)" >&2
+  log "  -h | --help     Show this help message and exit" >&2
+  log "" >&2
+  log "These are common git overlap commands used in various situations::" >&2
+  log "  git overlap -f \"README.md\"                                             Shows which open PRs modify README.md in the current repository" >&2
+  log "  git overlap -f \"README.md,path/to/file.txt\"                            Shows which open PRs modify either README.md or path/to/file.txt in the current repository" >&2
+  log "  git overlap -f \"path/to/file.txt\" -u https://github.com/user/repo.git  Shows which open PRs modify path/to/file.txt in the specified repository" >&2
+  log "  git overlap -f \"path/to/file.txt\" -m api -l 50                         Uses the API method to check up to last 50 open PRs modifying path/to/file.txt in the current repository" >&2
+  log "" >&2
   exit 1
 }
 
@@ -57,7 +72,7 @@ common_parse_args() {
           --help|-h)
               usage
               ;;
-          --file)
+          --file|-f)
               # Ensure the value exists for --file
               if [[ -z "$2" || "$2" == --* ]]; then
                   echo "Error: Argument expected for $1." >&2
@@ -70,7 +85,7 @@ common_parse_args() {
               
               shift 2 # Consume the flag and its value
               ;;
-          --url|--remote-url)
+          --url|-u)
               # Ensure the value exists for the URL
               if [[ -z "$2" || "$2" == --* ]]; then
                   log_error "Error: Argument expected for $1." >&2
@@ -81,7 +96,7 @@ common_parse_args() {
               shift 2 # Consume the flag and its value
               ;;
         
-          --method)
+          --method|-m)
               # Ensure the value exists for --method
               if [[ -z "$2" || "$2" == --* ]]; then
                   log_error "Argument expected for $1." >&2
@@ -103,7 +118,7 @@ common_parse_args() {
               shift 2 # Consume the flag and its value
               ;;
 
-          --limit)
+          --limit|-l)
               # Ensure the value exists for --limit
               if [[ -z "$2" || "$2" == --* ]]; then
                   log_error "Argument expected for $1." >&2
